@@ -1,0 +1,351 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ------------------------------------------------------------------
+   TwinTrip India — design tokens
+   Cultural layer = warm saffron / vermilion / earth.
+   Technology layer = near-black, monospaced metadata, thin rules.
+   ------------------------------------------------------------------ */
+:root {
+  --ink: #050505;
+  --ink-2: #0b0b0c;
+  --bone: #f2eee7;
+  --muted: #8b8782;
+  --saffron: #e8833a;
+  --vermilion: #9e2b18;
+  --teal: #2f6f63;
+
+  /* Shared animation timings. Change these to retune the whole site. */
+  --t-fast: 0.35s;
+  --t-med: 0.7s;
+  --t-slow: 1.2s;
+  --ease-cine: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+html,
+body {
+  background: var(--ink);
+  color: var(--bone);
+}
+
+body {
+  margin: 0;
+  font-family: 'Inter Tight', Inter, 'Helvetica Neue', Arial, sans-serif;
+  font-feature-settings: 'ss01' 1, 'cv01' 1;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+/* Lenis wants the html element to opt out of native smooth scrolling. */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+
+::selection {
+  background: var(--saffron);
+  color: #050505;
+}
+
+/* Minimal, unobtrusive scrollbar — the progress rail is the real indicator. */
+::-webkit-scrollbar {
+  width: 0px;
+}
+
+/* ---------------- Atmosphere layers ---------------- */
+
+/* Film grain. Pure CSS/SVG so there is never a broken image request. */
+.grain::after {
+  content: '';
+  position: absolute;
+  inset: -50%;
+  pointer-events: none;
+  opacity: 0.16;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
+  mix-blend-mode: overlay;
+}
+
+/* Topographic contour texture — an Indian-cartography nod without motifs. */
+.contours {
+  background-image: repeating-radial-gradient(
+    circle at 30% 70%,
+    rgba(232, 131, 58, 0.055) 0px,
+    rgba(232, 131, 58, 0.055) 1px,
+    transparent 1px,
+    transparent 22px
+  );
+}
+
+.hairline {
+  border-color: rgba(242, 238, 231, 0.12);
+}
+
+/* ---------------- Typography helpers ---------------- */
+.display {
+  font-family: 'Inter Tight', Inter, sans-serif;
+  font-weight: 500;
+  letter-spacing: -0.055em;
+  line-height: 0.86;
+  text-transform: uppercase;
+}
+
+.tech {
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 10px;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+/* Clip-based line reveal used by every scroll headline. */
+.line-mask {
+  overflow: hidden;
+  display: block;
+}
+
+/* ---------------- Cursor ---------------- */
+/* Custom cursor only on devices that actually have one. */
+@media (hover: hover) and (pointer: fine) {
+  body.custom-cursor,
+  body.custom-cursor * {
+    cursor: none !important;
+  }
+}
+
+/* ---------------- Accessibility ---------------- */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+  .grain::after {
+    display: none;
+  }
+}
+
+:focus-visible {
+  outline: 1px solid var(--saffron);
+  outline-offset: 3px;
+}
+
+/* Range inputs in the trip planner — stripped back to a hairline + dot. */
+input[type='range'] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  background: transparent;
+}
+input[type='range']::-webkit-slider-runnable-track {
+  height: 1px;
+  background: rgba(242, 238, 231, 0.2);
+}
+input[type='range']::-moz-range-track {
+  height: 1px;
+  background: rgba(242, 238, 231, 0.2);
+}
+input[type='range']::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  height: 12px;
+  width: 12px;
+  margin-top: -5.5px;
+  border-radius: 999px;
+  background: var(--saffron);
+  box-shadow: 0 0 0 6px rgba(232, 131, 58, 0.14);
+  transition: box-shadow var(--t-fast) var(--ease-cine);
+}
+input[type='range']:hover::-webkit-slider-thumb {
+  box-shadow: 0 0 0 10px rgba(232, 131, 58, 0.18);
+}
+input[type='range']::-moz-range-thumb {
+  height: 12px;
+  width: 12px;
+  border: none;
+  border-radius: 999px;
+  background: var(--saffron);
+}
+
+/* Shared keyframes used by Tailwind arbitrary animation utilities. */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ------------------------------------------------------------------
+   The globe is a fixed WebGL layer *behind* the scrolling document, so
+   <main> must not swallow pointer events over the first viewport. Each
+   direct child re-enables them; the hero keeps its own
+   `pointer-events-none` class (higher specificity) so the globe stays
+   grabbable through it.
+   ------------------------------------------------------------------ */
+main {
+  pointer-events: none;
+}
+main > * {
+  pointer-events: auto;
+}
+
+/* ------------------------------------------------------------------
+   FORUM + PASSPORT
+   Added with the community/passport features. Everything here reuses the
+   tokens above; no second palette and no second type scale.
+   ------------------------------------------------------------------ */
+
+/* Passport paper: a warm, very low-contrast grain so the passport reads as a
+   document without turning into skeuomorphic leather. */
+.passport-paper {
+  background-color: #0e0d0c;
+  background-image:
+    repeating-linear-gradient(
+      135deg,
+      rgba(242, 238, 231, 0.022) 0px,
+      rgba(242, 238, 231, 0.022) 1px,
+      transparent 1px,
+      transparent 6px
+    ),
+    radial-gradient(circle at 20% 15%, rgba(232, 131, 58, 0.07), transparent 55%);
+}
+
+/* Guilloche-style security rule used along passport edges. */
+.passport-rule {
+  background-image: repeating-linear-gradient(
+    90deg,
+    rgba(232, 131, 58, 0.45) 0px,
+    rgba(232, 131, 58, 0.45) 2px,
+    transparent 2px,
+    transparent 7px
+  );
+}
+
+/* 3D page flip on the passport cover. Only the front cover face rotates, on
+   its spine; the record leaf underneath stays still, so the open reads as a
+   page turning rather than a card tilting. */
+.passport-stage {
+  perspective: 1600px;
+}
+.passport-book {
+  transform-style: preserve-3d;
+}
+.passport-face {
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+.passport-cover {
+  transform-origin: left center;
+  transition: transform 1.1s var(--ease-cine);
+}
+.passport-stage:hover .passport-cover,
+.passport-stage:focus-within .passport-cover,
+.passport-book[data-open='true'] .passport-cover {
+  transform: rotateY(-152deg);
+}
+
+/* Stamp: rotates and settles in, like it was pressed onto the page. */
+@keyframes stampIn {
+  0% {
+    opacity: 0;
+    transform: scale(2.1) rotate(-18deg);
+  }
+  55% {
+    opacity: 1;
+    transform: scale(0.94) rotate(-7deg);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) rotate(-9deg);
+  }
+}
+.stamp-in {
+  animation: stampIn 0.85s var(--ease-cine) both;
+}
+
+/* Slow idle float for badges sitting in the collection grid. */
+@keyframes badgeFloat {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+.badge-float {
+  animation: badgeFloat 6s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* No flip transition; a toggle still works, just instantly. */
+  .passport-cover {
+    transition: none !important;
+  }
+  /* The default (closed) state would otherwise keep the book shut for
+     touch/reduced users; render it open and let the toggle reverse. */
+  .passport-book .passport-cover {
+    transform: rotateY(-152deg) !important;
+  }
+  .passport-book[data-open='false'] .passport-cover {
+    transform: none !important;
+  }
+  .badge-float,
+  .stamp-in {
+    animation: none !important;
+  }
+}
+
+/* Scrollable control rows keep a usable scrollbar off-screen but reachable. */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  scrollbar-width: none;
+}
+
+/* Verification progress bar: fills across the whole "running" step. The
+   global reduced-motion rule zeroes animation duration, so it snaps full. */
+@keyframes dj-bar {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+.dj-bar {
+  transform-origin: left;
+  animation: dj-bar 3.1s linear both;
+}
+
+/* Routed pages sit above the fixed globe layer and paint their own ground.
+   The bottom padding clears the mobile bar on small screens. */
+.route-surface {
+  position: relative;
+  z-index: 10;
+  min-height: 100vh;
+  background: var(--ink);
+  padding-bottom: 64px;
+}
+@media (min-width: 1024px) {
+  .route-surface {
+    padding-bottom: 0;
+  }
+}
